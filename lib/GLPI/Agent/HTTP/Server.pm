@@ -549,12 +549,25 @@ sub _handle_status {
     my ($self, $client, $request, $clientIp) = @_;
 
     my $status = $self->{agent}->getStatus();
-    my $response = HTTP::Response->new(
-        200,
-        'OK',
-        HTTP::Headers->new('Content-Type' => 'text/plain'),
-       "status: ".$status
-    );
+	my $req_headers = $request->headers();
+	my $accept = $req_headers->header('Accept');
+    my $version = $GLPI::Agent::Version::VERSION,
+	my $response;
+	if (lc($accept) eq "application/json") {
+		$response = HTTP::Response->new(
+			200,
+			'OK',
+			HTTP::Headers->new('Content-Type' => 'application/json'),
+		    '{"status": "'.$status.'", "version": "'.$version.'"}'
+		);
+	} else {
+		$response = HTTP::Response->new(
+			200,
+			'OK',
+			HTTP::Headers->new('Content-Type' => 'text/plain'),
+		   "status: ".$status
+		);
+	}
     $client->send_response($response);
     return 200;
 }
